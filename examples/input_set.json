@@ -1,0 +1,12 @@
+{
+  "UUID": "example-client",
+  "ACTION": "set",
+  "ID": "UADER-FCyT-IS2",
+  "cp": "3265",
+  "CUIT": "30-70925411-8",
+  "domicilio": "25 de Mayo 385",
+  "localidad": "Concepción del Uruguay",
+  "provincia": "Entre Ríos",
+  "telefono": "03442 43-1442",
+  "web": "https://fcyt.uader.edu.ar"
+}

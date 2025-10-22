@@ -1,0 +1,97 @@
+@startuml
+title Flujo de petición (Servidor/Proxy/DAO/Observers) - Activity Diagram
+
+skinparam activity {
+  ArrowColor Black
+  DiamondBackgroundColor #fff3e0
+  BackgroundColor #fdfdfd
+  StartColor #e1f5fe
+  EndColor #ffebee
+}
+
+start
+
+:Inicio - Petición Cliente;
+
+:Parsear JSON;
+if (¿JSON válido?) then (No)
+  :Enviar Error: JSON inválido;
+  :Cerrar conexión;
+  stop
+else (Sí)
+  :Extraer UUID, ACTION, ID;
+  :Registrar en CorporateLog;
+
+  if (¿Qué Acción?) then (GET)
+    if (¿ID presente?) then (No)
+      :Error: ID requerido;
+      :Cerrar conexión;
+      stop
+    else (Sí)
+      partition "Proxy" {
+        :Obtener datos;
+      }
+      partition "DAO (Singleton)" {
+        :Query DynamoDB;
+      }
+      if (¿Datos encontrados?) then (No)
+        :Error: Item no encontrado;
+        :Cerrar conexión;
+        stop
+      else (Sí)
+        :Retornar datos JSON;
+        :Cerrar conexión;
+        stop
+      endif
+    endif
+
+  elseif (SET)
+    if (¿ID presente?) then (No)
+      :Error: ID requerido;
+      :Cerrar conexión;
+      stop
+    else (Sí)
+      :Extraer campos CorporateData;
+      partition "Proxy" {
+        :Actualizar datos;
+      }
+      partition "DAO (Singleton)" {
+        :Update DynamoDB;
+      }
+      partition "Proxy" {
+        :Notificar observers;
+      }
+
+      while (¿Hay observers?) is (Sí)
+        :Enviar notificación a observer;
+      endwhile (No)
+
+      :Retornar datos actualizados;
+      :Cerrar conexión;
+      stop
+    endif
+
+  elseif (LIST)
+    partition "Proxy" {
+      :Listar todos;
+    }
+    partition "DAO (Singleton)" {
+      :Scan DynamoDB;
+    }
+    :Retornar array JSON;
+    :Cerrar conexión;
+    stop
+
+  else (SUBSCRIBE)
+    :Registrar observer;
+    :Almacenar socket cliente;
+    :Enviar confirmación;
+    :Mantener conexión abierta;
+    :Esperar actualizaciones;
+    ' Nota: el flujo del request termina lógicamente aquí,
+    ' la conexión permanece abierta para notificaciones
+    stop
+  endif
+endif
+
+@enduml

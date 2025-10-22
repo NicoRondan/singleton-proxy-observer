@@ -1,0 +1,55 @@
+@startuml
+title Ciclo de vida del cliente suscriptor - State Machine
+
+skinparam state {
+  BackgroundColor #fdfdfd
+  BorderColor #333333
+}
+
+[*] --> Desconectado : Inicio
+
+Desconectado --> Conectando : subscribe()
+Conectando --> Suscrito : Confirmación recibida
+Conectando --> ErrorConexion : Fallo conexión
+
+ErrorConexion --> Reconectando : Timer 30s
+Reconectando --> Conectando : Reintentar
+Reconectando --> Desconectado : Cancelar
+
+Suscrito --> EsperandoNotificaciones : Socket abierto
+
+EsperandoNotificaciones --> ProcesandoNotificacion : Datos recibidos
+ProcesandoNotificacion --> MostrandoNotificacion : Parse JSON
+MostrandoNotificacion --> GuardandoArchivo : Si "-o" especificado
+MostrandoNotificacion --> EsperandoNotificaciones : Continuar
+GuardandoArchivo --> EsperandoNotificaciones : Continuar
+
+EsperandoNotificaciones --> ConexionPerdida : Socket error
+ConexionPerdida --> Reconectando : Auto-reconexión
+
+EsperandoNotificaciones --> Desconectando : SIGINT / Ctrl+C
+Suscrito --> Desconectando : SIGINT / Ctrl+C
+Desconectando --> Desconectado : Cerrar socket
+
+Desconectado --> [*] : Fin
+
+note right of Suscrito
+El cliente mantiene la conexión TCP
+abierta para recibir notificaciones
+en tiempo real.
+end note
+
+note left of Reconectando
+Reintento automático cada 30s
+(configurable).
+end note
+
+note right of MostrandoNotificacion
+Formato:
+{
+  "action": "update",
+  "data": {...},
+  "timestamp": "..."
+}
+end note
+@enduml
