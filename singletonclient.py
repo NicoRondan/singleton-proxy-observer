@@ -46,8 +46,8 @@ def load_input_file(input_path: str) -> dict:
             raise ValueError("El archivo debe contener el campo 'ACTION'")
 
         action = data['ACTION'].lower()
-        if action not in ['get', 'set', 'list']:
-            raise ValueError(f"ACTION inválida: {action}. Debe ser: get, set, o list")
+        if action not in ['get', 'set', 'list', 'listlog']:
+            raise ValueError(f"ACTION inválida: {action}. Debe ser: get, set, list, o listlog")
 
         # Validar ID para get y set
         if action in ['get', 'set'] and 'ID' not in data:
@@ -111,6 +111,9 @@ Ejemplos de uso:
   # LIST - Listar todos los registros
   python singletonclient.py -i=examples/input_list.json -v
 
+  # LISTLOG - Listar logs de auditoría del cliente
+  python singletonclient.py -i=examples/input_listlog.json
+
 Formato de input.json para GET:
   {
     "ID": "UADER-FCyT-IS2",
@@ -134,6 +137,12 @@ Formato de input.json para SET:
 Formato de input.json para LIST:
   {
     "ACTION": "list"
+  }
+
+Formato de input.json para LISTLOG:
+  {
+    "UUID": "tu-uuid",
+    "ACTION": "listlog"
   }
         """
     )
@@ -205,6 +214,11 @@ Formato de input.json para LIST:
             if args.verbose:
                 print("📋 Ejecutando LIST")
             response = client.list_all()
+
+        elif action == 'listlog':
+            if args.verbose:
+                print("📜 Ejecutando LISTLOG")
+            response = client.listlog()
 
         # Verificar respuesta
         if response is None:

@@ -132,6 +132,42 @@ python singletonclient.py -i=examples/input_list.json
 
 ---
 
+#### 📜 LISTLOG - Listar logs de auditoría del cliente
+
+```bash
+python singletonclient.py -i=examples/input_listlog.json
+```
+
+**Input (`examples/input_listlog.json`):**
+```json
+{
+  "UUID": "test-uuid",
+  "ACTION": "listlog"
+}
+```
+
+**Output:**
+```json
+{
+  "action": "listlog",
+  "data": [
+    {
+      "id": "log-entry-id",
+      "uuid": "test-uuid",
+      "session": "session-id",
+      "action": "GET",
+      "item_id": "UADER-FCyT-IS2",
+      "timestamp": "2024-10-22T03:45:12.123456"
+    },
+    ...
+  ]
+}
+```
+
+**Nota:** Esta acción muestra todos los logs de auditoría (GET, SET, LIST, etc.) realizados por el UUID especificado. Los logs se almacenan en la tabla CorporateLog de DynamoDB.
+
+---
+
 ### 3️⃣ Recibir Notificaciones en Tiempo Real
 
 #### 👂 Suscribirse como Observer
@@ -366,6 +402,7 @@ Este sistema demuestra 3 patrones de diseño:
 - [ ] GET retorna datos correctamente
 - [ ] SET actualiza y notifica observers
 - [ ] LIST retorna todos los registros
+- [ ] LISTLOG muestra logs de auditoría del cliente
 - [ ] Observer recibe notificaciones en tiempo real
 - [ ] Tests automatizados pasan (12/12)
 - [ ] Logs de auditoría se crean en CorporateLog

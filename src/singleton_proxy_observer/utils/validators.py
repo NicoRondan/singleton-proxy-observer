@@ -14,14 +14,15 @@ class RequestValidator:
     """Validates client requests"""
 
     REQUIRED_FIELDS = ['UUID', 'ACTION']
-    VALID_ACTIONS = ['get', 'set', 'list', 'subscribe']
+    VALID_ACTIONS = ['get', 'set', 'list', 'subscribe', 'listlog']
 
     # Fields required for each action
     ACTION_REQUIREMENTS = {
         'get': ['ID'],
         'set': ['ID'],
         'list': [],
-        'subscribe': []
+        'subscribe': [],
+        'listlog': []
     }
 
     # Valid data fields for CorporateData

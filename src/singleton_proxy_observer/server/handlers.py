@@ -76,6 +76,8 @@ class RequestHandler:
                 return self._handle_set(item_id, request_data)
             elif action == 'list':
                 return self._handle_list()
+            elif action == 'listlog':
+                return self._handle_listlog(client_uuid)
             elif action == 'subscribe':
                 return self._handle_subscribe(client_uuid, client_socket)
             else:
@@ -143,6 +145,20 @@ class RequestHandler:
         result = self.proxy_service.list_data()
         logging.info(f"LIST successful, returned {len(result)} items")
         return {'action': 'list', 'data': result}
+
+    def _handle_listlog(self, client_uuid: str) -> Dict[str, Any]:
+        """
+        Handle LISTLOG request
+
+        Args:
+            client_uuid: UUID of the client requesting logs
+
+        Returns:
+            Response with list of log entries for this client
+        """
+        logs = self.log_dao.get_logs_by_client(client_uuid)
+        logging.info(f"LISTLOG successful for {client_uuid}, returned {len(logs)} log entries")
+        return {'action': 'listlog', 'data': logs}
 
     def _handle_subscribe(
         self,

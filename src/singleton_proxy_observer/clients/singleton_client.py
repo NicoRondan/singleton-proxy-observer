@@ -74,8 +74,9 @@ class SingletonClient:
             logging.debug(f"Connecting to {self.host}:{self.port}")
             client_socket.connect((self.host, self.port))
 
-            # Add CPU UUID to request
-            request_data['UUID'] = self.cpu_uuid
+            # Add CPU UUID to request if not already specified
+            if 'UUID' not in request_data or not request_data['UUID']:
+                request_data['UUID'] = self.cpu_uuid
 
             # Send request
             request_json = json.dumps(request_data) + '\n'
@@ -203,6 +204,30 @@ class SingletonClient:
         else:
             error_msg = response.get('error', 'Unknown error') if response else 'No response'
             logging.error(f"LIST failed: {error_msg}")
+            return None
+
+    def listlog(self) -> Optional[list]:
+        """
+        List audit logs for this client
+
+        Returns:
+            List of log entries or None if failed
+
+        Example:
+            >>> client = SingletonClient()
+            >>> logs = client.listlog()
+        """
+        request = {
+            'ACTION': 'listlog'
+        }
+
+        response = self._send_request(request)
+
+        if response and 'error' not in response:
+            return response.get('data', [])
+        else:
+            error_msg = response.get('error', 'Unknown error') if response else 'No response'
+            logging.error(f"LISTLOG failed: {error_msg}")
             return None
 
     def execute_from_file(

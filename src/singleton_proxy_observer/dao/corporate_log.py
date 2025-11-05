@@ -90,25 +90,39 @@ class CorporateLogDAO(metaclass=SingletonMeta):
 
         Args:
             uuid_client: The client UUID
-            limit: Maximum number of logs to retrieve
+            limit: Maximum number of logs to retrieve (0 = no limit)
 
         Returns:
             List of log entries
 
         Note:
-            This is a simplified implementation. For production,
-            consider using a GSI on uuid field.
+            This uses scan which is not efficient for large tables.
+            For production, create a GSI on 'uuid' field.
         """
         try:
-            # Note: This uses scan which is not efficient for large tables
-            # In production, create a GSI on 'uuid' field
-            response = self.table.scan(
-                FilterExpression='#uuid = :uuid',
-                ExpressionAttributeNames={'#uuid': 'uuid'},
-                ExpressionAttributeValues={':uuid': uuid_client},
-                Limit=limit
-            )
-            return response.get('Items', [])
+            items = []
+            scan_kwargs = {
+                'FilterExpression': '#uuid = :uuid',
+                'ExpressionAttributeNames': {'#uuid': 'uuid'},
+                'ExpressionAttributeValues': {':uuid': uuid_client}
+            }
+
+            # Paginate through all results
+            while True:
+                response = self.table.scan(**scan_kwargs)
+                items.extend(response.get('Items', []))
+
+                # Check if we have enough items or if there are more pages
+                if limit > 0 and len(items) >= limit:
+                    return items[:limit]
+
+                # Check if there are more pages
+                if 'LastEvaluatedKey' not in response:
+                    break
+
+                scan_kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
+
+            return items
         except ClientError as e:
             logging.error(f"Error retrieving logs for {uuid_client}: {e}")
             return []
